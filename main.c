@@ -1,32 +1,19 @@
 #include "aes.h"
-#include "parser.h"
-#include <argp.h>
+#include <stdio.h>
 
-int main(int argc, char **argv){
+static unsigned char *plaintext = "\x32\x43\xf6\xa8\x88\x5a\x30\x8d\x31\x31\x98\xa2\xe0\x37\x07\x34";
+static unsigned char *key = "\x2b\x7e\x15\x16\x28\xae\xd2\xa6\xab\xf7\x15\x88\x09\xcf\x4f\x3c";
+
+int main(){
+
+    unsigned char *ciphertext = malloc(NK_BLOCK);
+    memcpy(ciphertext, plaintext, NK_BLOCK);
+    aes(ciphertext, key);
     
-    struct arguments arguments;
-    arguments.file = NULL;
-    arguments.plaintext = NULL;
-    arguments.key = NULL;
-    argp_parse (&argp, argc, argv, 0, 0, &arguments);
-
-    if (arguments.file != NULL){
-        char *plaintext = file_open_read(arguments.file);
-        printf("%s", plaintext);
-        free(plaintext);
-    } else if (arguments.plaintext != NULL){
-        hex_num_t *key = convert_to_hex(arguments.key);
-        key->num = key_expansion(key->num);
-
-        hex_num_t *plaintext = convert_to_hex(arguments.plaintext);
-        aes_t state = set_state(plaintext->num);
-
-        aes(&state, key->num);
-
-        memcpy(plaintext->num, state.state, STATE_SIZE);
-
-        print_hex("Encrypted msg: ", plaintext);
+    for(int i=0; i<NK_BLOCK; i++){
+        printf("%02x", ciphertext[i]);
     }
+    printf("\n");
 
     return 0;
 }

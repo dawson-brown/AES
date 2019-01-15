@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-I. -lm
-DEPS = parser.h aes.h file_handler/file_handler.h number_handler/number_handler.h
-OBJ = main.o parser.o aes.o file_handler/file_handler.o number_handler/number_handler.o
+DEPS = aes.h
+OBJ = main.o aes.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

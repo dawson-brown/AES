@@ -25,34 +25,6 @@ static const unsigned char rcon[10] =
   0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
 };
 
-unsigned char *key_expansion(unsigned char *key)
-{  
-  unsigned char *expanded_key = (unsigned char *)malloc(NB*(NR+1)*NB);
-  unsigned char i, temp;
-  memcpy(expanded_key, key, 16);
-
-  for (i=NK_BLOCK; i<(NB*(NR+1))*NB; i+=NB)
-  {
-    expanded_key[i] = expanded_key[i-NK];
-    expanded_key[i+1] = expanded_key[i-NK+1];
-    expanded_key[i+2] = expanded_key[i-NK+2];
-    expanded_key[i+3] = expanded_key[i-NK+3];
-    
-    if (i%(NK_BLOCK)==0)
-    {
-      ROT_WORD(temp, expanded_key[i], expanded_key[i+1], expanded_key[i+2], expanded_key[i+3]);
-      SBOX(expanded_key[i], expanded_key[i+1], expanded_key[i+2], expanded_key[i+3]);
-      RCON(expanded_key[i], i);
-    }
-
-    expanded_key[i] ^= expanded_key[i-NK_BLOCK];
-    expanded_key[i+1] ^= expanded_key[i-NK_BLOCK+1];
-    expanded_key[i+2] ^= expanded_key[i-NK_BLOCK+2];
-    expanded_key[i+3] ^= expanded_key[i-NK_BLOCK+3];
-  }
-  return expanded_key; 
-}
-
 void mix_columns(unsigned char *state) 
 {
     unsigned char i, j;
@@ -77,22 +49,23 @@ void mix_columns(unsigned char *state)
     }
 }
 
-void aes(aes_t *state, unsigned char *key)
+void aes(aes_t *text, unsigned char *key)
 {
+  unsigned char state[NK_BLOCK], round_key[NK_BLOCK];
+  memcpy(state, text, NK_BLOCK);
+  memcpy(round_key, key, NK_BLOCK);
   unsigned char i, temp;
-  key = key_expansion(key);
 
-  ADD_ROUND_KEY(state, key, temp);     
-  for(i=0; i<(NR-1); i++)
+  ADD_ROUND_KEY(state, round_key);    
+  for(i=0; i<(NR); i++)
   {
-    SBOX_ENC(state, temp);
+    EXPAND(round_key);
+    SBOX(state);
     SHIFT_ROWS(temp, state);
-    mix_columns(state);
-    ADD_ROUND_KEY(state, key, temp);
+    if (i!=(NR-1)) mix_columns(state);
+    ADD_ROUND_KEY(state, round_key);
   }
 
-  SBOX_ENC(state, temp);
-  SHIFT_ROWS(temp, state);
-  ADD_ROUND_KEY(state, key, temp);
+  memcpy(text, state, NK_BLOCK);
 }
 

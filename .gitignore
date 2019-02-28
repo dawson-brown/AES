@@ -6,3 +6,6 @@
 
 # ignore exectuable file
 aes
+
+#ignore files for testing
+test

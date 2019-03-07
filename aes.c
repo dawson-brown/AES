@@ -28,6 +28,20 @@ unsigned char sub(unsigned char byte){
   
 }
 
+//Rijndael inverse S-BOX.
+unsigned char sub_i(unsigned char byte){
+  unsigned char sub_byte = '\0', inverse = '\0';
+
+    do {
+      if (mul(byte, sub_byte)==1) inverse=sub_byte;
+    } while (++sub_byte);
+
+  return ((inverse << 1)|(inverse >> 7))
+    ^((inverse << 3)|(inverse >> 5))
+    ^((inverse << 6)|(inverse >> 2))^0x05;
+  
+}
+
 void enc(aes_t *state, unsigned char *key)
 {
   unsigned char j, i, rc='\x01', rc_m = '\x80', s[16];
@@ -44,7 +58,7 @@ void enc(aes_t *state, unsigned char *key)
     //perform S-Box and shift rows
     for (BLOCK) state[j] = sub(s[(j+4*(j%4)) % 16]);
 
-    //SHIFT_ROWS(temp, state);
+    //mix columns
     if (i!=(NR-1)){
       for (BLOCK) s[j] = state[j];
       for(BLOCK) state[j]=mul(s[j],'\2')^mul(s[4*(j/4)+(j+1)%4],'\3')^mul(s[4*(j/4)+(j+2)%4],'\1')^mul(s[4*(j/4)+(j+3)%4],'\1');
@@ -56,5 +70,18 @@ void enc(aes_t *state, unsigned char *key)
 
 void dec(aes_t *state, unsigned char *key){
 
+  unsigned char j, i, rc='\x01', rc_m = '\x80', s[16];
+
+  for(ROUNDS)
+  {
+
+    for (BLOCK) state[j] = sub_i(s[(j-4*(j%4)) % 16]);
+
+    //inverse mix columns 
+    if (i!=(NR-1)){
+      for (BLOCK) s[j] = state[j];
+      for(BLOCK) state[j]=mul(s[j],'\x0E')^mul(s[4*(j/4)+(j+1)%4],'\x0B')^mul(s[4*(j/4)+(j+2)%4],'\x0D')^mul(s[4*(j/4)+(j+3)%4],'\x09');
+    }
+  }
 }
 

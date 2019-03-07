@@ -28,28 +28,33 @@ unsigned char sub(unsigned char byte){
   
 }
 
-void aes(aes_t *state, unsigned char *key)
+void enc(aes_t *state, unsigned char *key)
 {
-  unsigned char temp, j, i, rc='\x01', rc_m = '\x80', s[16];
-
-  //add round key
-  for (BLOCK) state[j] ^= key[j];  
+  unsigned char j, i, rc='\x01', rc_m = '\x80', s[16];
+  
   for(ROUNDS)
   {
+    //add round key
+    for (BLOCK) s[j] = state[j]^key[j];
+
     //update round key
     for (KEY) key[j] = j<4 ? key[j]^sub(key[(j+13)-(j/3)*4])^(j==0 ? rc : 0):(key[j]^key[j-NK]); 
     rc=(rc<rc_m)?(2*rc):(2*rc)^'\x1B';
 
-    //perform S-Box
-    for (BLOCK) state[j] = sub(state[j]); 
-    SHIFT_ROWS(temp, state);
+    //perform S-Box and shift rows
+    for (BLOCK) state[j] = sub(s[(j+4*(j%4)) % 16]);
+
+    //SHIFT_ROWS(temp, state);
     if (i!=(NR-1)){
       for (BLOCK) s[j] = state[j];
       for(BLOCK) state[j]=mul(s[j],'\2')^mul(s[4*(j/4)+(j+1)%4],'\3')^mul(s[4*(j/4)+(j+2)%4],'\1')^mul(s[4*(j/4)+(j+3)%4],'\1');
     }
-
-    //add round key
-    for (BLOCK) state[j] ^= key[j];
   }
+  //add round key
+  for (BLOCK) state[j] ^= key[j];
+}
+
+void dec(aes_t *state, unsigned char *key){
+
 }
 

@@ -1,22 +1,19 @@
+
 #define NB 4
 #define NK 4
 #define BLOCK_SIZE 16
 #define KEY_SIZE 16
 #define NR 10
 
-#define ROUNDS i=0; i<NR; i++
-#define KEY j=0; j<KEY_SIZE; j++
-#define KEY_I j=KEY_SIZE-1; j>=0; j--
-#define BLOCK j=0; j<BLOCK_SIZE; j++
 
-typedef unsigned char aes_t;
+typedef unsigned char u8_t;
 
-unsigned char sub(unsigned char byte);
+u8_t mul(u8_t a, u8_t b);
 
-unsigned char sub_i(unsigned char byte);
+u8_t *expand_rcon();
 
-unsigned char mul(unsigned char a, unsigned char b);
+u8_t *expand_key(u8_t *key);
 
-void enc(aes_t *state, unsigned char *key);
+void enc(u8_t *state, u8_t *key);
 
-void dec(aes_t *state, unsigned char *key);
+void dec(u8_t *state, u8_t *key);

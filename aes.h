@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 
 #define NB 4
 #define NK 4
@@ -8,12 +10,10 @@
 
 typedef unsigned char u8_t;
 
-u8_t mul(u8_t a, u8_t b);
+static u8_t mul(u8_t a, u8_t b);
 
-u8_t *expand_rcon();
+static void expand_key(const u8_t key[static 16], u8_t *key_schedule);
 
-u8_t *expand_key(u8_t *key);
+void enc(u8_t state[static 16], u8_t key[static 16]);
 
-void enc(u8_t *state, u8_t *key);
-
-void dec(u8_t *state, u8_t *key);
+void dec(u8_t state[static 16], u8_t key[static 16]);

@@ -36,9 +36,13 @@ static const u8_t rsbox[256] = {
   0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
   0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d };
 
+static const u8_t rcon[NR] = {
+  0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
+};
+
 
 //multiply in Rijndael finite field
-u8_t mul(u8_t a, u8_t b) {
+static u8_t mul(u8_t a, u8_t b) {
 	u8_t p = 0;
 	do {
     if (b & 1) p ^= a;
@@ -50,38 +54,43 @@ u8_t mul(u8_t a, u8_t b) {
 	return p;
 }
 
-u8_t *expand_rcon() {
-
-
-
-}
-
 //completely expand the key
-u8_t *expand_key(u8_t *key) {
+static void expand_key(const u8_t* key, u8_t* key_schedule) {
 
+  memcpy(key_schedule, key, KEY_SIZE);
+  u8_t schedule_size = 4*( NB * (NR+1));
+  u8_t temp;
+  int con = 0;
 
+  for (u8_t j=KEY_SIZE; j<schedule_size; j++) {
+
+    if (j % KEY_SIZE < 4){
+      int byte_pos = (j+1)%NK == 0 ? j-NK-3 : j-NK + 1;
+      temp = sbox[key_schedule[byte_pos]] ^ ( (j%KEY_SIZE == 0) ? rcon[con++]: 0 );
+    } else {
+      temp = key_schedule[j-NK];
+    }
+    key_schedule[j] = temp ^ key_schedule[j-KEY_SIZE];
+
+  }
 
 }
 
-void enc(u8_t *state, u8_t *key)
+void enc(u8_t state[static 16], u8_t* key)
 {
-  u8_t rc='\x01', rc_i = '\x80', rc_x='\x00', s[16];
+
+  u8_t *key_schedule = malloc(4*(NB * (NR+1)));
+  expand_key(key, key_schedule);
+  int key_byte=0;
+
+  u8_t s[16];
   
   for(u8_t i=0; i<NR; i++)
-  {  
+  { 
+     
     //add round key
     for (u8_t j=0; j<BLOCK_SIZE; j++) 
-      s[j] = state[j]^key[j];
-
-    //update round key
-    for (u8_t j=0; j<KEY_SIZE; j++) 
-      key[j] = j<4 ? 
-          key[j]^sbox[key[j==3 ? 12 : j+13]]^(j==0 ? rc : 0):
-          (key[j]^key[j-NK]); 
-
-    //update rc      
-    rc_x=(rc==rc_i)?'\x1B':'\x00';
-    rc = (rc<<1)^rc_x;
+      s[j] = state[j]^key[key_byte++];
 
     //perform S-Box and shift rows
     for (u8_t j=0; j<BLOCK_SIZE; j++) 
@@ -103,11 +112,11 @@ void enc(u8_t *state, u8_t *key)
 
   //add round key
   for (u8_t j=0; j<BLOCK_SIZE; j++) 
-    state[j] ^= key[j];
+    state[j] ^= key[key_byte++];
 
 }
 
-void dec(u8_t *state, u8_t *key){
+void dec(u8_t state[static 16], u8_t key[static KEY_SIZE]){
 
   u8_t rc='\x36', rc_i = '\x1b', rc_x='\x00', s[16];
 

@@ -76,33 +76,31 @@ static void expand_key(const u8_t* key, u8_t* key_schedule) {
 
 }
 
-void enc(u8_t state[static 16], u8_t* key)
+void enc(u8_t state[static 16], const u8_t* key)
 {
 
   u8_t *key_schedule = malloc(4*(NB * (NR+1)));
   expand_key(key, key_schedule);
   int key_byte=0;
-
   u8_t s[16];
   
-  for(u8_t i=0; i<NR; i++)
+  for(int i=0; i<NR; i++)
   { 
      
     //add round key
-    for (u8_t j=0; j<BLOCK_SIZE; j++) 
-      s[j] = state[j]^key[key_byte++];
+    for (int j=0; j<BLOCK_SIZE; j++) 
+      s[j] = state[j]^key_schedule[key_byte++];
 
     //perform S-Box and shift rows
-    for (u8_t j=0; j<BLOCK_SIZE; j++) 
+    for (int j=0; j<BLOCK_SIZE; j++) 
       state[j] = sbox[s[(j+4*(j%4)) % 16]];
 
     //mix columns
     if (i!=(NR-1)){
 
-      for (u8_t j=0; j<BLOCK_SIZE; j++) 
-        s[j] = state[j];
+      memcpy(s, state, BLOCK_SIZE);
 
-      for(u8_t j=0; j<BLOCK_SIZE; j++) 
+      for(int j=0; j<BLOCK_SIZE; j++) 
         state[j]=mul(s[j],'\2')^
                   mul(s[4*(j/4)+(j+1)%4],'\3')^
                   mul(s[4*(j/4)+(j+2)%4],'\1')^
@@ -111,54 +109,48 @@ void enc(u8_t state[static 16], u8_t* key)
   }
 
   //add round key
-  for (u8_t j=0; j<BLOCK_SIZE; j++) 
-    state[j] ^= key[key_byte++];
+  for (int j=0; j<BLOCK_SIZE; j++) 
+    state[j] ^= key_schedule[key_byte++];
 
 }
 
-void dec(u8_t state[static 16], u8_t key[static KEY_SIZE]){
+void dec(u8_t state[static 16], const u8_t key[static KEY_SIZE]){
 
-  u8_t rc='\x36', rc_i = '\x1b', rc_x='\x00', s[16];
+  u8_t *key_schedule = malloc(4*(NB * (NR+1)));
+  expand_key(key, key_schedule);
+  int key_byte = 4*(NB * (NR+1)) - 1;
+  u8_t s[16];
 
   //add round key
-  for (u8_t j=0; j<BLOCK_SIZE; j++) s[j] = state[j]^key[j];
+  for (int j=BLOCK_SIZE-1; j>=0; j--) 
+    s[j] = state[j]^key_schedule[key_byte--];
 
-  for(u8_t i=0; i<NR; i++)
+  for(int i=0; i<NR; i++)
   {
     //inverse shift rows and subbytes
-    for (u8_t j=0; j<BLOCK_SIZE; j++) 
+    for (int j=0; j<BLOCK_SIZE; j++) 
       state[(j+4*(j%4)) % 16] = rsbox[s[j]];
 
-    //update round key
-    for (char j=KEY_SIZE-1; j>=0; j--) 
-      key[j] = j<4 ? 
-          key[j]^sbox[key[j==3 ? 12 : j+13]]^(j==0 ? rc : 0):
-          (key[j]^key[j-NK]);
-
-    //update rc
-    rc = (rc>>1)^rc_x;
-    rc_x=(rc==rc_i)?'\x8d':'\x00';
-
     //add round key
-    for (u8_t j=0; j<BLOCK_SIZE; j++) 
-      s[j] = state[j]^key[j];
+    for (int j=BLOCK_SIZE-1; j>=0; j--) 
+      s[j] = state[j]^key_schedule[key_byte--];
 
     //inverse mix columns 
     if (i!=(NR-1)){
 
-      for(u8_t j=0; j<BLOCK_SIZE; j++) 
+      for(int j=0; j<BLOCK_SIZE; j++) 
         state[j]=mul(s[j],'\x0E')^
                   mul(s[4*(j/4)+(j+1)%4],'\x0B')^
                   mul(s[4*(j/4)+(j+2)%4],'\x0D')^
                   mul(s[4*(j/4)+(j+3)%4],'\x09');
 
-      for (u8_t j=0; j<BLOCK_SIZE; j++) 
+      for (int j=0; j<BLOCK_SIZE; j++) 
         s[j] = state[j];
     }
 
     //add round key
-    for (u8_t j=0; j<BLOCK_SIZE; j++) 
-      state[j] ^= key[j];
+    for (int j=BLOCK_SIZE-1; j>=0; j--) 
+      state[j] ^= key_schedule[j];
 
   }
 }

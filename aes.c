@@ -76,7 +76,7 @@ static void expand_key(const u8_t* key, u8_t* key_schedule) {
 
 }
 
-void enc(u8_t state[static 16], const u8_t* key)
+void aes_enc(u8_t state[static 16], const u8_t* key)
 {
 
   u8_t *key_schedule = malloc(4*(NB * (NR+1)));
@@ -112,9 +112,11 @@ void enc(u8_t state[static 16], const u8_t* key)
   for (int j=0; j<BLOCK_SIZE; j++) 
     state[j] ^= key_schedule[key_byte++];
 
+  free(key_schedule);
+
 }
 
-void dec(u8_t state[static 16], const u8_t key[static KEY_SIZE]){
+void aes_dec(u8_t state[static 16], const u8_t key[static KEY_SIZE]){
 
   u8_t *key_schedule = malloc(4*(NB * (NR+1)));
   expand_key(key, key_schedule);
@@ -153,5 +155,8 @@ void dec(u8_t state[static 16], const u8_t key[static KEY_SIZE]){
       state[j] ^= key_schedule[j];
 
   }
+
+  free(key_schedule);
+  
 }
 

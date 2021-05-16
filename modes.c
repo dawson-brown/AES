@@ -6,27 +6,27 @@
 void init_ciphertext(block_ctx_t *state)
 {
 
-    int pad = state->block_length - (state->length % state->block_length);
-    int length = state->length + (pad==state->block_length ? 0 : pad);
-    u8_t *input = malloc(length);
-    memcpy(input, state->text, state->length);
+    int pad = state->block_length - (state->text_length % state->block_length);
+    int length = state->text_length + (pad==state->block_length ? 0 : pad);
+    uint8_t *input = malloc(length);
+    memcpy(input, state->text, state->text_length);
 
     if (pad != state->block_length)
-        memset((input + length - pad), (u8_t)pad, pad);
+        memset((input + length - pad), (uint8_t)pad, pad);
 
-    state->length = length;
+    state->text_length = length;
     state->text = input;
     
 }
 
 
-block_ctx_t ecb_enc(void (*cipher)(u8_t*, const u8_t*), block_ctx_t state, const u8_t *key)
+block_ctx_t ecb_enc(void (*cipher)(uint8_t*, const uint8_t*), block_ctx_t state, const uint8_t *key)
 {
 
     init_ciphertext(&state);
-    u8_t *end = state.text + state.length;
+    uint8_t *end = state.text + state.text_length;
     int block_length = state.block_length;
-    u8_t *block = state.text;
+    uint8_t *block = state.text;
 
     while (block < end){
 
@@ -38,12 +38,12 @@ block_ctx_t ecb_enc(void (*cipher)(u8_t*, const u8_t*), block_ctx_t state, const
     return state;
 }
 
-block_ctx_t ecb_dec(void (*cipher)(u8_t*, const u8_t*), block_ctx_t state, const u8_t *key)
+block_ctx_t ecb_dec(void (*cipher)(uint8_t*, const uint8_t*), block_ctx_t state, const uint8_t *key)
 {
 
-    u8_t *end = state.text + state.length;
+    uint8_t *end = state.text + state.text_length;
     int block_length = state.block_length;
-    u8_t *block = state.text;
+    uint8_t *block = state.text;
 
     while (block < end){
 
@@ -56,13 +56,18 @@ block_ctx_t ecb_dec(void (*cipher)(u8_t*, const u8_t*), block_ctx_t state, const
 }
 
 
-block_ctx_t cbc_enc(void (*cipher)(u8_t*, const u8_t*), block_ctx_t state, const u8_t *key, const u8_t *iv){
+block_ctx_t cbc_enc(
+    void (*cipher)(uint8_t*, const uint8_t*), 
+    block_ctx_t state, 
+    const uint8_t *key, 
+    const uint8_t *iv)
+{
     
     init_ciphertext(&state);
-    u8_t *end = state.text + state.length;
+    uint8_t *end = state.text + state.text_length;
     int block_length = state.block_length;
-    u8_t *block = state.text;
-    u8_t *iv_dyn = iv;
+    uint8_t *block = state.text;
+    uint8_t *iv_dyn = iv;
 
     while(block < end){
 
@@ -79,13 +84,17 @@ block_ctx_t cbc_enc(void (*cipher)(u8_t*, const u8_t*), block_ctx_t state, const
     return state;
 }
 
-
-block_ctx_t cbc_dec(void (*cipher)(u8_t*, const u8_t*), block_ctx_t state, const u8_t *key, const u8_t *iv){
+block_ctx_t cbc_dec(
+    void (*cipher)(uint8_t*, const uint8_t*), 
+    block_ctx_t state, 
+    const uint8_t *key, 
+    const uint8_t *iv)
+{
     
-    u8_t *start = state.text;
+    uint8_t *start = state.text;
     int block_length = state.block_length;
-    u8_t *block = start + state.length - block_length;
-    u8_t *iv_dyn;
+    uint8_t *block = start + state.text_length - block_length;
+    uint8_t *iv_dyn;
 
     while(block >= start){
                 

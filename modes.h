@@ -1,22 +1,73 @@
+//!  A block cipher modes of operation module. 
+/*!
+  This module contains functions for block cipher modes of operation.
+  Each mode of operation is indifferent to the block cipher used.
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
-typedef struct block_ctx {
-    uint8_t *text;
-    int text_length;
-    int block_length;
-} block_ctx_t;
+/**
+ * This function encrypts a plaintext with a block cipher in ecb mode
+ * 
+ * \param[in] cipher a block cipher
+ * \param[in,out] state the plaintext to encrypt
+ * \param[in] state_len the length of \p state
+ * \param[in] key: the encryption key
+ */ 
+void ecb_enc(
+    uint8_t * (*cipher)(uint8_t*, const uint8_t*), 
+    uint8_t * state, 
+    const int state_len, 
+    const uint8_t *key);
 
+/**
+ * This function decrypts a ciphertext with a block cipher in ecb mode
+ * 
+ * \param[in] cipher a block cipher
+ * \param[in,out] state the ciphertext to decrypt
+ * \param[in] state_len the length of \p state
+ * \param[in] key the decryption key
+ */ 
+void ecb_dec(
+    uint8_t * (*cipher)(uint8_t*, const uint8_t*), 
+    uint8_t * state,
+    const int state_len, 
+    const uint8_t *key);
 
-//block cipher modes of operation and helpers
-void init_ciphertext(block_ctx_t *state);
+/**
+ * This function encrypts a plaintext with a block cipher in cbc mode
+ * 
+ * \param[in] cipher a block cipher
+ * \param[in,out] state the plaintext to encrypt
+ * \param[in] state_len the length of \p state
+ * \param[in] key the encryption key
+ * \param[in] iv the initialization vector
+ * \param[in] iv_len the length of \p iv
+ */ 
+void cbc_enc(
+    uint8_t * (*cipher)(uint8_t*, const uint8_t*), 
+    uint8_t * state, 
+    const int state_len,
+    const uint8_t *key, 
+    const uint8_t *iv,
+    const int iv_len);
 
-block_ctx_t ecb_enc(void (*cipher)(uint8_t*, const uint8_t*), block_ctx_t state, const uint8_t *key);
-
-block_ctx_t ecb_dec(void (*cipher)(uint8_t*, const uint8_t*), block_ctx_t input, const uint8_t *key);
-
-
-block_ctx_t cbc_enc(void (*cipher)(uint8_t*, const uint8_t*), block_ctx_t state, const uint8_t *key, const uint8_t *iv);
-
-block_ctx_t cbc_dec(void (*cipher)(uint8_t*, const uint8_t*), block_ctx_t state, const uint8_t *key, const uint8_t *iv);
+/**
+ * This function decrypts a ciphertext with a block cipher in cbc mode
+ * 
+ * \param[in] cipher a block cipher
+ * \param[in,out] state the ciphertext to decrypt
+ * \param[in] state_len the length of \p state
+ * \param[in] key the encryption key
+ * \param[in] iv the initialization vector
+ * \param[in] iv_len the length of \p iv
+ */
+void cbc_dec(
+    uint8_t * (*cipher)(uint8_t*, const uint8_t*), 
+    uint8_t * state, 
+    const int state_len,
+    const uint8_t *key, 
+    const uint8_t *iv,
+    const int iv_len);

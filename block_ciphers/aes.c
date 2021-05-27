@@ -76,7 +76,7 @@ static void expand_128_key(const uint8_t* key, uint8_t* key_schedule) {
 
 }
 
-uint8_t * aes_128_enc(uint8_t state[static 16], const uint8_t key[static AES_128_KEY_SIZE])
+uint8_t * aes_128_enc(uint8_t block[static 16], const uint8_t key[static AES_128_KEY_SIZE])
 {
 
   uint8_t *key_schedule = malloc(4*(NB * (NR+1)));
@@ -89,19 +89,19 @@ uint8_t * aes_128_enc(uint8_t state[static 16], const uint8_t key[static AES_128
      
     //add round key
     for (int j=0; j<AES_BLOCK_SIZE; j++) 
-      s[j] = state[j]^key_schedule[key_byte++];
+      s[j] = block[j]^key_schedule[key_byte++];
 
     //perform S-Box and shift rows
     for (int j=0; j<AES_BLOCK_SIZE; j++) 
-      state[j] = sbox[s[(j+4*(j%4)) % 16]];
+      block[j] = sbox[s[(j+4*(j%4)) % 16]];
 
     //mix columns
     if (i!=(NR-1)){
 
-      memcpy(s, state, AES_BLOCK_SIZE);
+      memcpy(s, block, AES_BLOCK_SIZE);
 
       for(int j=0; j<AES_BLOCK_SIZE; j++) 
-        state[j]=mul(s[j],'\2')^
+        block[j]=mul(s[j],'\2')^
                   mul(s[4*(j/4)+(j+1)%4],'\3')^
                   mul(s[4*(j/4)+(j+2)%4],'\1')^
                   mul(s[4*(j/4)+(j+3)%4],'\1');
@@ -110,15 +110,15 @@ uint8_t * aes_128_enc(uint8_t state[static 16], const uint8_t key[static AES_128
 
   //add round key
   for (int j=0; j<AES_BLOCK_SIZE; j++) 
-    state[j] ^= key_schedule[key_byte++];
+    block[j] ^= key_schedule[key_byte++];
 
   free(key_schedule);
 
-  return state+AES_BLOCK_SIZE;
+  return block+AES_BLOCK_SIZE;
 
 }
 
-uint8_t * aes_128_dec(uint8_t state[static 16], const uint8_t key[static AES_128_KEY_SIZE]){
+uint8_t * aes_128_dec(uint8_t block[static 16], const uint8_t key[static AES_128_KEY_SIZE]){
 
   uint8_t *key_schedule = malloc(4*(NB * (NR+1)));
   expand_128_key(key, key_schedule);
@@ -127,40 +127,40 @@ uint8_t * aes_128_dec(uint8_t state[static 16], const uint8_t key[static AES_128
 
   //add round key
   for (int j=AES_BLOCK_SIZE-1; j>=0; j--) 
-    s[j] = state[j]^key_schedule[key_byte--];
+    s[j] = block[j]^key_schedule[key_byte--];
 
   for(int i=0; i<NR; i++)
   {
     //inverse shift rows and subbytes
     for (int j=0; j<AES_BLOCK_SIZE; j++) 
-      state[(j+4*(j%4)) % 16] = rsbox[s[j]];
+      block[(j+4*(j%4)) % 16] = rsbox[s[j]];
 
     //add round key
     for (int j=AES_BLOCK_SIZE-1; j>=0; j--) 
-      s[j] = state[j]^key_schedule[key_byte--];
+      s[j] = block[j]^key_schedule[key_byte--];
 
     //inverse mix columns 
     if (i!=(NR-1)){
 
       for(int j=0; j<AES_BLOCK_SIZE; j++) 
-        state[j]=mul(s[j],'\x0E')^
+        block[j]=mul(s[j],'\x0E')^
                   mul(s[4*(j/4)+(j+1)%4],'\x0B')^
                   mul(s[4*(j/4)+(j+2)%4],'\x0D')^
                   mul(s[4*(j/4)+(j+3)%4],'\x09');
 
       for (int j=0; j<AES_BLOCK_SIZE; j++) 
-        s[j] = state[j];
+        s[j] = block[j];
     }
 
     //add round key
     for (int j=AES_BLOCK_SIZE-1; j>=0; j--) 
-      state[j] ^= key_schedule[j];
+      block[j] ^= key_schedule[j];
 
   }
 
   free(key_schedule);
 
-  return state+AES_BLOCK_SIZE;
+  return block+AES_BLOCK_SIZE;
   
 }
 

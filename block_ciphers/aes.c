@@ -118,7 +118,7 @@ uint8_t * aes_128_enc(uint8_t state[static 16], const uint8_t key[static AES_128
 
 }
 
-void aes_128_dec(uint8_t state[static 16], const uint8_t key[static AES_128_KEY_SIZE]){
+uint8_t * aes_128_dec(uint8_t state[static 16], const uint8_t key[static AES_128_KEY_SIZE]){
 
   uint8_t *key_schedule = malloc(4*(NB * (NR+1)));
   expand_128_key(key, key_schedule);

@@ -2,10 +2,12 @@
 *.o
 
 # ignore AES test vectors
-KAT_AES/
+# KAT_AES/
 
 #ignore vscode debug files
 .vscode/
 
-#ignore executable testing file
-test
+#ignore build directories
+test/
+debug/
+release/

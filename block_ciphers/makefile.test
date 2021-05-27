@@ -1,0 +1,22 @@
+OBJDIR = test
+dummy_build_folder := $(shell mkdir -p $(OBJDIR))
+
+CFLAGS  += -I. -D_FILE_OFFSET_BITS=64 -Wall
+OFLAGS  = -O0
+
+OBJS= $(OBJDIR)/aes.o \
+    $(OBJDIR)/modes.o
+
+all: $(OBJDIR)/test
+
+.SILENT:
+
+$(OBJDIR)/aes.o: aes.c
+	$(CC) $(CFLAGS) $(OFLAGS) -c $< -o $@
+
+$(OBJDIR)/modes.o: ./op_modes/modes.c
+	$(CC) $(CFLAGS) $(OFLAGS) -c $< -o $(OBJDIR)/modes.o
+
+$(OBJDIR)/test: test.c $(OBJS)
+	echo   "  CC    tests"
+	$(CC) $(CFLAGS) $(OFLAGS) test.c -lm -o $@ $(OBJS)

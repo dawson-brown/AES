@@ -51,7 +51,7 @@ void cbc_enc(
     uint8_t * state, 
     const int state_len,
     const uint8_t *key, 
-    const uint8_t *iv,
+    uint8_t *iv,
     const int iv_len);
 
 /**
@@ -69,5 +69,5 @@ void cbc_dec(
     uint8_t * state, 
     const int state_len,
     const uint8_t *key, 
-    const uint8_t *iv,
+    uint8_t *iv,
     const int iv_len);

@@ -57,7 +57,7 @@ void cbc_enc(
     uint8_t * state, 
     const int state_len,
     const uint8_t *key, 
-    const uint8_t *iv,
+    uint8_t *iv,
     const int iv_len)
 {
     uint8_t *end = state + state_len;
@@ -83,7 +83,7 @@ void cbc_dec(
     uint8_t * state, 
     const int state_len,
     const uint8_t *key, 
-    const uint8_t *iv,
+    uint8_t *iv,
     const int iv_len)
 {
     uint8_t *start = state;
@@ -104,7 +104,5 @@ void cbc_dec(
 
     for (int i = 0; i<iv_len; i++)
         block[i] ^= iv[i];
-
-    return state;
 
 }
